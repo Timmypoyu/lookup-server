@@ -1,0 +1,938 @@
+From 6e145799549d7dbb339b741c1eba2e4ac9147718 Mon Sep 17 00:00:00 2001
+From: Wu Po Yu <pw2440@columbia.edu>
+Date: Sat, 24 Feb 2018 19:57:17 -0500
+Subject: [PATCH 01/14] added addfront, findnode(unfinished)
+
+---
+ part1/mylist-test.c | 45 +++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 41 insertions(+), 4 deletions(-)
+
+diff --git a/part1/mylist-test.c b/part1/mylist-test.c
+index 817f2a6..c7d2e68 100644
+--- a/part1/mylist-test.c
++++ b/part1/mylist-test.c
+@@ -36,7 +36,7 @@ int main()
+     }
+     traverseList(&list, &printDouble);
+     printf("\n");
+-
++/*
+     // test flipSignDouble()
+     printf("testing flipSignDouble(): ");
+     traverseList(&list, &flipSignDouble);
+@@ -46,7 +46,7 @@ int main()
+     traverseList(&list, &flipSignDouble);
+     traverseList(&list, &printDouble);
+     printf("\n");
+-    
++    */
+     // test findNode()
+     printf("testing findNode(): ");
+     x = 3.5;
+@@ -56,7 +56,7 @@ int main()
+     node = findNode(&list, &x, &compareDouble);
+     assert(node != NULL && *(double *)node->data == x);
+     printf("OK\n");
+-
++/*
+     // test popFront()
+     while ((data = popFront(&list)) != NULL) {
+ 	printf("popped %.1f, the rest is: [ ", *(double *)data);
+@@ -84,6 +84,43 @@ int main()
+ 	traverseList(&list, &printDouble);
+ 	printf("]\n");
+     }
+-
++*/
+     return 0;
+ }
++
++//addFront
++struct Node *addFront(struct List *list, void *data){
++	struct Node *node = malloc(sizeof(struct Node));
++       	node->next = list->head;
++	node->data = data; 
++	list->head = node; 
++	return node;
++}
++
++//traverseList
++void traverseList(struct List *list, void (*f)(void *)){
++	struct Node *evaluate = list->head;
++	while(evaluate){
++		f(evaluate->data);
++		evaluate = evaluate->next;	
++	}
++}
++
++//findNode
++struct Node *findNode(struct List *list, const void *dataSought,
++		int (*compar)(const void *, const void *)){
++	struct Node *evaluate = list->head;
++	while(evaluate){
++		int y = compar(evaluate->data, dataSought);
++		if (y = 0){
++		return evaluate;
++		}	
++	evaluate = evaluate->next;
++	}
++}
++
++//compare method for findNode
++int compareDouble(const void * a, const void * b){
++	return (*(double*)a > *(double*)b) - (*(double*)b > *(double*)a);
++}
++
+-- 
+2.7.4
+
+
+From 0a820057105dd8433a3b97de89ab4ba8f8df5782 Mon Sep 17 00:00:00 2001
+From: Wu Po Yu <pw2440@columbia.edu>
+Date: Sun, 25 Feb 2018 17:26:02 -0500
+Subject: [PATCH 02/14] added mylist.c
+
+---
+ part1/mylist.c | 108 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 108 insertions(+)
+ create mode 100644 part1/mylist.c
+
+diff --git a/part1/mylist.c b/part1/mylist.c
+new file mode 100644
+index 0000000..69726b4
+--- /dev/null
++++ b/part1/mylist.c
+@@ -0,0 +1,108 @@
++#include <stdio.h> 
++#include <stdlib.h>
++#include <assert.h>
++#include "mylist.h"
++
++//addFront
++struct Node *addFront(struct List *list, void *data){
++	struct Node *node = malloc(sizeof(struct Node));
++       	node->next = list->head;
++	node->data = data; 
++	list->head = node; 
++	return node;
++}
++
++//traverseList
++void traverseList(struct List *list, void (*f)(void *)){
++	struct Node *evaluate = list->head;
++	while(evaluate){
++		f(evaluate->data);
++		evaluate = evaluate->next;	
++	}
++}
++
++//findNode
++struct Node *findNode(struct List *list, const void *dataSought,
++		int (*compar)(const void *, const void *)){
++	struct Node *evaluate = list->head;
++	while(evaluate){
++		int y = compareDouble(evaluate->data, dataSought);
++		if (y == 0){
++			return evaluate;
++		}	
++		evaluate = evaluate->next;
++	}
++	evaluate = NULL; 
++	return evaluate;
++}
++
++//compare method for findNode
++int compareDouble(const void * a, const void * b){
++	return (*(double*)a > *(double*)b) - (*(double*)b > *(double*)a);
++}
++
++//flip
++void flipSignDouble(void *data){
++	double flipped = *(double*)data;
++	flipped *= -1; 
++	*(double*)data = flipped;
++}
++
++//popfront
++void *popFront(struct List *list){
++	if(list->head == NULL){
++		return NULL;
++	}
++	struct Node *here =list->head;
++	void *re = (list->head)->data;
++	list->head = (list->head)->next;
++	free(here);
++	return re;
++}
++
++//remove
++void removeAllNodes(struct List *list){
++	struct Node *evaluate = list->head;
++	while(evaluate){
++		popFront(list);
++		evaluate = evaluate->next;
++	}
++}
++
++//addAfter 
++struct Node *addAfter(struct List*list, struct Node *prevNode, void *data){
++	struct Node *add = malloc(sizeof(struct Node));
++	if(prevNode){
++		add->data = data; 
++		add->next = prevNode->next;
++		prevNode->next= add;
++	}else if(prevNode == NULL){
++		add = addFront(list, data);
++	}	
++	return add;
++}
++
++//Reverse
++void reverseList(struct List *list){
++	struct Node *prv = NULL;
++	struct Node *cur = list->head;
++	struct Node *nxt;
++
++	/*	prv->next = cur;
++	while (cur){
++		cur->next = nxt->next;
++		nxt->next = list->head;
++		list->head= nxt;
++		nxt = cur->next;	
++	}
++	*/
++
++	while(cur){
++		nxt = cur->next;
++		cur->next = prv;
++		prv = cur;
++		cur = nxt;
++	}
++	list->head = prv;
++}
++
+-- 
+2.7.4
+
+
+From 3734716097047987549df09b903db29eb9a0344c Mon Sep 17 00:00:00 2001
+From: Wu Po Yu <pw2440@columbia.edu>
+Date: Sun, 25 Feb 2018 17:26:13 -0500
+Subject: [PATCH 03/14] Makefile
+
+---
+ part1/Makefile | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+ create mode 100644 part1/Makefile
+
+diff --git a/part1/Makefile b/part1/Makefile
+new file mode 100644
+index 0000000..17fa01e
+--- /dev/null
++++ b/part1/Makefile
+@@ -0,0 +1,18 @@
++CC = gcc
++CFLAGS = -Wall -g
++LFLAGS = -g 
++
++mylist-test: libmylist.a mylist-test.o 
++	gcc mylist-test.o -L. -lmylist -o mylist-test  
++
++libmylist.a: mylist.o 
++	ar rc libmylist.a mylist.o
++	ranlib libmylist.a
++
++mylist.o : mylist.c mylist.h 
++
++mylist-test.o : mylist-test.c mylist.h
++
++.PHONY: clean 
++clean: 
++	rm -f *.o mylist a.out
+-- 
+2.7.4
+
+
+From fba03ee2acbbb635b1610ffccfcf8059b93deff1 Mon Sep 17 00:00:00 2001
+From: Wu Po Yu <pw2440@columbia.edu>
+Date: Sun, 25 Feb 2018 19:40:18 -0500
+Subject: [PATCH 04/14] added Makefile of part 2
+
+---
+ part2/Makefile | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+ create mode 100644 part2/Makefile
+
+diff --git a/part2/Makefile b/part2/Makefile
+new file mode 100644
+index 0000000..799f648
+--- /dev/null
++++ b/part2/Makefile
+@@ -0,0 +1,15 @@
++CC = gcc 
++HEADER = ../part1/mylist.h
++CFLAGS = -Wall -g -I../part1
++LDFLAGS = -g -L../part1 -lmylist 
++
++revecho: revecho.o 
++
++revecho.o: revecho.c $(HEADER) 
++
++.PHONY: clean
++clean:
++	rm -f *.o revecho a.out 
++
++
++
+-- 
+2.7.4
+
+
+From 62d8d1634b24aa67882cfaba3a1df0b55c45995a Mon Sep 17 00:00:00 2001
+From: Wu Po Yu <pw2440@columbia.edu>
+Date: Mon, 26 Feb 2018 17:59:37 -0500
+Subject: [PATCH 05/14] changed Makefile command order, for library dependency
+
+---
+ part2/Makefile | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/part2/Makefile b/part2/Makefile
+index 799f648..419e8d5 100644
+--- a/part2/Makefile
++++ b/part2/Makefile
+@@ -4,12 +4,9 @@ CFLAGS = -Wall -g -I../part1
+ LDFLAGS = -g -L../part1 -lmylist 
+ 
+ revecho: revecho.o 
+-
+-revecho.o: revecho.c $(HEADER) 
++	gcc -g revecho.o -L../part1 -lmylist -o revecho
++revecho.o: revecho.c 
+ 
+ .PHONY: clean
+-clean:
+-	rm -f *.o revecho a.out 
+-
+-
+-
++clean: 
++	rm -f *.o revecho a.out
+-- 
+2.7.4
+
+
+From b56259ac746640df0915c56324540b6333c713ee Mon Sep 17 00:00:00 2001
+From: Wu Po Yu <pw2440@columbia.edu>
+Date: Mon, 26 Feb 2018 18:00:19 -0500
+Subject: [PATCH 06/14] added revecho.c
+
+---
+ part2/revecho.c | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+ create mode 100644 part2/revecho.c
+
+diff --git a/part2/revecho.c b/part2/revecho.c
+new file mode 100644
+index 0000000..724db72
+--- /dev/null
++++ b/part2/revecho.c
+@@ -0,0 +1,33 @@
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include "mylist.h"
++
++static void printString(void *p){
++	printf("%s\n", (char *)p);
++}
++
++int main(int argc, char **argv){
++	argv++;
++
++	//Initializing the list
++	struct List list;
++	initList(&list); 
++
++	while(*argv){
++		addFront(&list, (void *)*argv);
++		argv++; 
++	}	
++
++	traverseList(&list, &printString);
++	printf("\n");
++	char *sought = "dude"; 
++	if(findNode(&list, (void *)sought,
++		(int (*)(const void *,const void *))strcmp)!=0){
++		printf("dude found\n");
++	}else{
++		printf("dude not found\n");
++	}
++
++
++}
+-- 
+2.7.4
+
+
+From 84b89aa6026f43512c623dfa9bd7159ddb33e934 Mon Sep 17 00:00:00 2001
+From: Wu Po Yu <pw2440@columbia.edu>
+Date: Mon, 26 Feb 2018 18:44:32 -0500
+Subject: [PATCH 07/14] fixed memory lost in addAfter function
+
+---
+ part1/mylist-test.c | 93 +++++++++++++++++++++++++++++++++++++++++++++++------
+ part1/mylist.c      |  6 ++--
+ 2 files changed, 87 insertions(+), 12 deletions(-)
+
+diff --git a/part1/mylist-test.c b/part1/mylist-test.c
+index c7d2e68..c2ef91b 100644
+--- a/part1/mylist-test.c
++++ b/part1/mylist-test.c
+@@ -36,7 +36,7 @@ int main()
+     }
+     traverseList(&list, &printDouble);
+     printf("\n");
+-/*
++
+     // test flipSignDouble()
+     printf("testing flipSignDouble(): ");
+     traverseList(&list, &flipSignDouble);
+@@ -46,17 +46,17 @@ int main()
+     traverseList(&list, &flipSignDouble);
+     traverseList(&list, &printDouble);
+     printf("\n");
+-    */
++  
+     // test findNode()
+     printf("testing findNode(): ");
+     x = 3.5;
+-    node = findNode(&list, &x, &compareDouble);
++    node  = findNode(&list, &x, &compareDouble);
+     assert(node == NULL);
+     x = 1.0;
+     node = findNode(&list, &x, &compareDouble);
+     assert(node != NULL && *(double *)node->data == x);
+     printf("OK\n");
+-/*
++
+     // test popFront()
+     while ((data = popFront(&list)) != NULL) {
+ 	printf("popped %.1f, the rest is: [ ", *(double *)data);
+@@ -77,6 +77,7 @@ int main()
+     traverseList(&list, &printDouble);
+     printf("\n");
+ 
++    
+     // test reverseList()
+     while ((data = popFront(&list)) != NULL) {
+ 	printf("popped %.1f, and reversed the rest: [ ", *(double *)data);
+@@ -84,10 +85,17 @@ int main()
+ 	traverseList(&list, &printDouble);
+ 	printf("]\n");
+     }
+-*/
++/*
++    traverseList(&list, &printDouble);
++    //test removeAllNodes
++    removeAllNodes(&list);
++    printf("Remove All : [");
++    traverseList(&list, &printDouble);
++    printf(" ]");*/
++
+     return 0;
+ }
+-
++/*
+ //addFront
+ struct Node *addFront(struct List *list, void *data){
+ 	struct Node *node = malloc(sizeof(struct Node));
+@@ -111,12 +119,14 @@ struct Node *findNode(struct List *list, const void *dataSought,
+ 		int (*compar)(const void *, const void *)){
+ 	struct Node *evaluate = list->head;
+ 	while(evaluate){
+-		int y = compar(evaluate->data, dataSought);
+-		if (y = 0){
+-		return evaluate;
++		int y = compareDouble(evaluate->data, dataSought);
++		if (y == 0){
++			return evaluate;
+ 		}	
+-	evaluate = evaluate->next;
++		evaluate = evaluate->next;
+ 	}
++	evaluate = NULL; 
++	return evaluate;
+ }
+ 
+ //compare method for findNode
+@@ -124,3 +134,66 @@ int compareDouble(const void * a, const void * b){
+ 	return (*(double*)a > *(double*)b) - (*(double*)b > *(double*)a);
+ }
+ 
++//flip
++void flipSignDouble(void *data){
++	double flipped = *(double*)data;
++	flipped *= -1; 
++	*(double*)data = flipped;
++}
++
++//popfront
++void *popFront(struct List *list){
++	if(list->head == NULL){
++		return NULL;
++	}
++	struct Node *here = list->head;
++	void * re = (list->head)->data; 
++	list->head = (list->head)->next;
++	free(here);
++	return re;
++}
++
++//remove
++void removeAllNodes(struct List *list){
++	struct Node *evaluate = list->head;
++	while(evaluate){
++		popFront(list);
++		evaluate = evaluate->next;
++	}
++}
++
++//addAfter 
++struct Node *addAfter(struct List*list, struct Node *prevNode, void *data){
++	struct Node *add = malloc(sizeof(struct Node));
++	if(prevNode){
++		add->data = data; 
++		add->next = prevNode->next;
++		prevNode->next= add;
++	}else if(prevNode == NULL){
++		add = addFront(list, data);
++	}	
++return add;
++}
++
++//Reverse
++void reverseList(struct List *list){
++	struct Node *prv = NULL;
++	struct Node *cur = list->head;
++	struct Node *nxt;
++//	prv->next = cur;
++//	while (cur){
++//		cur->next = nxt->next;
++//		nxt->next = list->head;
++//		list->head= nxt;
++//		nxt = cur->next;	
++//	}
++
++	while(cur){
++		nxt = cur->next;
++		cur->next = prv;
++		prv = cur;
++		cur = nxt;
++	}
++	list->head = prv;
++}
++*/
+diff --git a/part1/mylist.c b/part1/mylist.c
+index 69726b4..a1e35e2 100644
+--- a/part1/mylist.c
++++ b/part1/mylist.c
+@@ -26,7 +26,7 @@ struct Node *findNode(struct List *list, const void *dataSought,
+ 		int (*compar)(const void *, const void *)){
+ 	struct Node *evaluate = list->head;
+ 	while(evaluate){
+-		int y = compareDouble(evaluate->data, dataSought);
++		int y = compar(evaluate->data, dataSought);
+ 		if (y == 0){
+ 			return evaluate;
+ 		}	
+@@ -71,11 +71,13 @@ void removeAllNodes(struct List *list){
+ 
+ //addAfter 
+ struct Node *addAfter(struct List*list, struct Node *prevNode, void *data){
+-	struct Node *add = malloc(sizeof(struct Node));
++	struct Node *add;
+ 	if(prevNode){
++		add = malloc(sizeof(struct Node));
+ 		add->data = data; 
+ 		add->next = prevNode->next;
+ 		prevNode->next= add;
++		return add;
+ 	}else if(prevNode == NULL){
+ 		add = addFront(list, data);
+ 	}	
+-- 
+2.7.4
+
+
+From a07f6e2967f579ccab9398a55362f16e68172126 Mon Sep 17 00:00:00 2001
+From: Wu Po Yu <pw2440@columbia.edu>
+Date: Mon, 26 Feb 2018 18:45:10 -0500
+Subject: [PATCH 08/14] modified MAkefile to create library
+
+---
+ part1/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/part1/Makefile b/part1/Makefile
+index 17fa01e..c9627fa 100644
+--- a/part1/Makefile
++++ b/part1/Makefile
+@@ -15,4 +15,4 @@ mylist-test.o : mylist-test.c mylist.h
+ 
+ .PHONY: clean 
+ clean: 
+-	rm -f *.o mylist a.out
++	rm -f *.o mylist a.out libmylist.a mylist-test
+-- 
+2.7.4
+
+
+From f211cf7f697855918e3fb06b73435cab23cc4a8a Mon Sep 17 00:00:00 2001
+From: Wu Po Yu <pw2440@columbia.edu>
+Date: Mon, 26 Feb 2018 19:16:57 -0500
+Subject: [PATCH 09/14] fixed removeAllNodes function for memory error
+
+---
+ part1/mylist.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/part1/mylist.c b/part1/mylist.c
+index a1e35e2..084654b 100644
+--- a/part1/mylist.c
++++ b/part1/mylist.c
+@@ -64,8 +64,8 @@ void *popFront(struct List *list){
+ void removeAllNodes(struct List *list){
+ 	struct Node *evaluate = list->head;
+ 	while(evaluate){
+-		popFront(list);
+ 		evaluate = evaluate->next;
++		popFront(list);
+ 	}
+ }
+ 
+-- 
+2.7.4
+
+
+From 1e6da909e552bd0b0700c7f84e4f2882267b52b1 Mon Sep 17 00:00:00 2001
+From: Wu Po Yu <pw2440@columbia.edu>
+Date: Mon, 26 Feb 2018 19:18:28 -0500
+Subject: [PATCH 10/14] modified revecho.c
+
+---
+ part2/revecho.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/part2/revecho.c b/part2/revecho.c
+index 724db72..c7773be 100644
+--- a/part2/revecho.c
++++ b/part2/revecho.c
+@@ -22,12 +22,13 @@ int main(int argc, char **argv){
+ 	traverseList(&list, &printString);
+ 	printf("\n");
+ 	char *sought = "dude"; 
+-	if(findNode(&list, (void *)sought,
++	if(findNode(&list,(void *)sought,
+ 		(int (*)(const void *,const void *))strcmp)!=0){
+ 		printf("dude found\n");
+ 	}else{
+ 		printf("dude not found\n");
+ 	}
+-
++	
++	removeAllNodes(&list);
+ 
+ }
+-- 
+2.7.4
+
+
+From 14ac3b364221a1dc241ba9cddc2b84180ddbdf65 Mon Sep 17 00:00:00 2001
+From: Wu Po Yu <pw2440@columbia.edu>
+Date: Tue, 27 Feb 2018 18:05:39 -0500
+Subject: [PATCH 11/14] adjust mylist-test.c for submisison
+
+---
+ part1/mylist-test.c | 109 ----------------------------------------------------
+ 1 file changed, 109 deletions(-)
+
+diff --git a/part1/mylist-test.c b/part1/mylist-test.c
+index c2ef91b..2324b61 100644
+--- a/part1/mylist-test.c
++++ b/part1/mylist-test.c
+@@ -85,115 +85,6 @@ int main()
+ 	traverseList(&list, &printDouble);
+ 	printf("]\n");
+     }
+-/*
+-    traverseList(&list, &printDouble);
+-    //test removeAllNodes
+-    removeAllNodes(&list);
+-    printf("Remove All : [");
+-    traverseList(&list, &printDouble);
+-    printf(" ]");*/
+-
+     return 0;
+ }
+-/*
+-//addFront
+-struct Node *addFront(struct List *list, void *data){
+-	struct Node *node = malloc(sizeof(struct Node));
+-       	node->next = list->head;
+-	node->data = data; 
+-	list->head = node; 
+-	return node;
+-}
+-
+-//traverseList
+-void traverseList(struct List *list, void (*f)(void *)){
+-	struct Node *evaluate = list->head;
+-	while(evaluate){
+-		f(evaluate->data);
+-		evaluate = evaluate->next;	
+-	}
+-}
+-
+-//findNode
+-struct Node *findNode(struct List *list, const void *dataSought,
+-		int (*compar)(const void *, const void *)){
+-	struct Node *evaluate = list->head;
+-	while(evaluate){
+-		int y = compareDouble(evaluate->data, dataSought);
+-		if (y == 0){
+-			return evaluate;
+-		}	
+-		evaluate = evaluate->next;
+-	}
+-	evaluate = NULL; 
+-	return evaluate;
+-}
+-
+-//compare method for findNode
+-int compareDouble(const void * a, const void * b){
+-	return (*(double*)a > *(double*)b) - (*(double*)b > *(double*)a);
+-}
+ 
+-//flip
+-void flipSignDouble(void *data){
+-	double flipped = *(double*)data;
+-	flipped *= -1; 
+-	*(double*)data = flipped;
+-}
+-
+-//popfront
+-void *popFront(struct List *list){
+-	if(list->head == NULL){
+-		return NULL;
+-	}
+-	struct Node *here = list->head;
+-	void * re = (list->head)->data; 
+-	list->head = (list->head)->next;
+-	free(here);
+-	return re;
+-}
+-
+-//remove
+-void removeAllNodes(struct List *list){
+-	struct Node *evaluate = list->head;
+-	while(evaluate){
+-		popFront(list);
+-		evaluate = evaluate->next;
+-	}
+-}
+-
+-//addAfter 
+-struct Node *addAfter(struct List*list, struct Node *prevNode, void *data){
+-	struct Node *add = malloc(sizeof(struct Node));
+-	if(prevNode){
+-		add->data = data; 
+-		add->next = prevNode->next;
+-		prevNode->next= add;
+-	}else if(prevNode == NULL){
+-		add = addFront(list, data);
+-	}	
+-return add;
+-}
+-
+-//Reverse
+-void reverseList(struct List *list){
+-	struct Node *prv = NULL;
+-	struct Node *cur = list->head;
+-	struct Node *nxt;
+-//	prv->next = cur;
+-//	while (cur){
+-//		cur->next = nxt->next;
+-//		nxt->next = list->head;
+-//		list->head= nxt;
+-//		nxt = cur->next;	
+-//	}
+-
+-	while(cur){
+-		nxt = cur->next;
+-		cur->next = prv;
+-		prv = cur;
+-		cur = nxt;
+-	}
+-	list->head = prv;
+-}
+-*/
+-- 
+2.7.4
+
+
+From ac6a2bc31014f7f46b506bf08db39faece8ba9e4 Mon Sep 17 00:00:00 2001
+From: Wu Po Yu <pw2440@columbia.edu>
+Date: Tue, 27 Feb 2018 18:06:53 -0500
+Subject: [PATCH 12/14] READMe.txt added
+
+---
+ README.txt | 86 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 86 insertions(+)
+
+diff --git a/README.txt b/README.txt
+index 66dfd3e..1906421 100644
+--- a/README.txt
++++ b/README.txt
+@@ -9,3 +9,89 @@ The description should indicate whether your solution for the part is
+ working or not.  You may also want to include anything else you would
+ like to communicate to the grader such as extra functionalities you
+ implemented or how you tried to fix your non-working code.
++
++------------------------------------------------------------------------------
++Name: Wu Po Yu 
++UNI: pw2440
++lab3 
++
++Part 1:
++The code and functions  work as the instruction intended. 
++==25820== Memcheck, a memory error detector
++==25820== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
++==25820== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
++==25820== Command: ./mylist-test
++==25820== 
++testing addFront(): 9.0 8.0 7.0 6.0 5.0 4.0 3.0 2.0 1.0 
++testing flipSignDouble(): -9.0 -8.0 -7.0 -6.0 -5.0 -4.0 -3.0 -2.0 -1.0 
++testing flipSignDouble() again: 9.0 8.0 7.0 6.0 5.0 4.0 3.0 2.0 1.0 
++testing findNode(): OK
++popped 9.0, the rest is: [ 8.0 7.0 6.0 5.0 4.0 3.0 2.0 1.0 ]
++popped 8.0, the rest is: [ 7.0 6.0 5.0 4.0 3.0 2.0 1.0 ]
++popped 7.0, the rest is: [ 6.0 5.0 4.0 3.0 2.0 1.0 ]
++popped 6.0, the rest is: [ 5.0 4.0 3.0 2.0 1.0 ]
++popped 5.0, the rest is: [ 4.0 3.0 2.0 1.0 ]
++popped 4.0, the rest is: [ 3.0 2.0 1.0 ]
++popped 3.0, the rest is: [ 2.0 1.0 ]
++popped 2.0, the rest is: [ 1.0 ]
++popped 1.0, the rest is: [ ]
++testing addAfter(): 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 
++popped 1.0, and reversed the rest: [ 9.0 8.0 7.0 6.0 5.0 4.0 3.0 2.0 ]
++popped 9.0, and reversed the rest: [ 2.0 3.0 4.0 5.0 6.0 7.0 8.0 ]
++popped 2.0, and reversed the rest: [ 8.0 7.0 6.0 5.0 4.0 3.0 ]
++popped 8.0, and reversed the rest: [ 3.0 4.0 5.0 6.0 7.0 ]
++popped 3.0, and reversed the rest: [ 7.0 6.0 5.0 4.0 ]
++popped 7.0, and reversed the rest: [ 4.0 5.0 6.0 ]
++popped 4.0, and reversed the rest: [ 6.0 5.0 ]
++popped 6.0, and reversed the rest: [ 5.0 ]
++popped 5.0, and reversed the rest: [ ]
++==25820== 
++==25820== HEAP SUMMARY:
++==25820==     in use at exit: 0 bytes in 0 blocks
++==25820==   total heap usage: 19 allocs, 19 frees, 1,312 bytes allocated
++==25820== 
++==25820== All heap blocks were freed -- no leaks are possible
++==25820== 
++==25820== For counts of detected and suppressed errors, rerun with: -v
++==25820== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
++
++Part 2: 
++No command line written for the valgrind below:
++==27007== Memcheck, a memory error detector
++==27007== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
++==27007== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
++==27007== Command: ./revecho
++==27007== 
++
++dude not found
++==27007== 
++==27007== HEAP SUMMARY:
++==27007==     in use at exit: 0 bytes in 0 blocks
++==27007==   total heap usage: 1 allocs, 1 frees, 3,072 bytes allocated
++==27007== 
++==27007== All heap blocks were freed -- no leaks are possible
++==27007== 
++==27007== For counts of detected and suppressed errors, rerun with: -v
++==27007== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
++
++Command line: "one two three dude" entered for the valgrind below:
++==27573== Memcheck, a memory error detector
++==27573== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
++==27573== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
++==27573== Command: ./revecho one two three dude
++==27573== 
++dude
++three
++two
++one
++
++dude found
++==27573== 
++==27573== HEAP SUMMARY:
++==27573==     in use at exit: 0 bytes in 0 blocks
++==27573==   total heap usage: 5 allocs, 5 frees, 3,648 bytes allocated
++==27573== 
++==27573== All heap blocks were freed -- no leaks are possible
++==27573== 
++==27573== For counts of detected and suppressed errors, rerun with: -v
++==27573== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+-- 
+2.7.4
+
+
+From e2cf183665e6e8cea63e4435fe3412812e72b063 Mon Sep 17 00:00:00 2001
+From: Wu Po Yu <pw2440@columbia.edu>
+Date: Tue, 27 Feb 2018 18:09:08 -0500
+Subject: [PATCH 13/14] added Makefile in part2
+
+---
+ part2/Makefile | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/part2/Makefile b/part2/Makefile
+index 419e8d5..3791a4c 100644
+--- a/part2/Makefile
++++ b/part2/Makefile
+@@ -1,5 +1,4 @@
+ CC = gcc 
+-HEADER = ../part1/mylist.h
+ CFLAGS = -Wall -g -I../part1
+ LDFLAGS = -g -L../part1 -lmylist 
+ 
+-- 
+2.7.4
+
+
+From 718e557f7c993ba82cb021b6c46d074720cf0800 Mon Sep 17 00:00:00 2001
+From: Wu Po Yu <pw2440@columbia.edu>
+Date: Tue, 27 Feb 2018 22:22:51 -0500
+Subject: [PATCH 14/14] modified makefile to rid of option flags
+
+---
+ part1/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/part1/Makefile b/part1/Makefile
+index c9627fa..d978b8d 100644
+--- a/part1/Makefile
++++ b/part1/Makefile
+@@ -3,7 +3,7 @@ CFLAGS = -Wall -g
+ LFLAGS = -g 
+ 
+ mylist-test: libmylist.a mylist-test.o 
+-	gcc mylist-test.o -L. -lmylist -o mylist-test  
++	gcc mylist-test.o libmylist.a -o mylist-test  
+ 
+ libmylist.a: mylist.o 
+ 	ar rc libmylist.a mylist.o
+-- 
+2.7.4
+

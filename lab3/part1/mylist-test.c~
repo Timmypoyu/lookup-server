@@ -1,0 +1,199 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include "mylist.h"
+
+static void printDouble(void *p)
+{
+    printf("%.1f ", *(double *)p);
+}
+
+static void die(const char *message)
+{
+    perror(message);
+    exit(1); 
+}
+
+int main() 
+{
+    double a[] = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 };
+    int n = sizeof(a) / sizeof(a[0]);
+
+    int i;
+    double x;
+    void *data;
+    struct Node *node;
+
+    // initialize list
+    struct List list;
+    initList(&list);
+
+    // test addFront()
+    printf("testing addFront(): ");
+    for (i = 0; i < n; i++) {
+	if (addFront(&list, a+i) == NULL) 
+	    die("addFront() failed");
+    }
+    traverseList(&list, &printDouble);
+    printf("\n");
+
+    // test flipSignDouble()
+    printf("testing flipSignDouble(): ");
+    traverseList(&list, &flipSignDouble);
+    traverseList(&list, &printDouble);
+    printf("\n");
+    printf("testing flipSignDouble() again: ");
+    traverseList(&list, &flipSignDouble);
+    traverseList(&list, &printDouble);
+    printf("\n");
+  
+    // test findNode()
+    printf("testing findNode(): ");
+    x = 3.5;
+    node  = findNode(&list, &x, &compareDouble);
+    assert(node == NULL);
+    x = 1.0;
+    node = findNode(&list, &x, &compareDouble);
+    assert(node != NULL && *(double *)node->data == x);
+    printf("OK\n");
+
+    // test popFront()
+    while ((data = popFront(&list)) != NULL) {
+	printf("popped %.1f, the rest is: [ ", *(double *)data);
+	traverseList(&list, &printDouble);
+	printf("]\n");
+    }
+
+    // test addAfter()
+    printf("testing addAfter(): ");
+    node = NULL;
+    for (i = 0; i < n; i++) {
+	// We keep adding after the previously added node,
+	// so we are in effect 'appending' to the list.
+	node = addAfter(&list, node, a+i);
+	if (node == NULL) 
+	    die("addAfter() failed");
+    }
+    traverseList(&list, &printDouble);
+    printf("\n");
+
+    
+    // test reverseList()
+    while ((data = popFront(&list)) != NULL) {
+	printf("popped %.1f, and reversed the rest: [ ", *(double *)data);
+	reverseList(&list);
+	traverseList(&list, &printDouble);
+	printf("]\n");
+    }
+/*
+    traverseList(&list, &printDouble);
+    //test removeAllNodes
+    removeAllNodes(&list);
+    printf("Remove All : [");
+    traverseList(&list, &printDouble);
+    printf(" ]");*/
+
+    return 0;
+}
+/*
+//addFront
+struct Node *addFront(struct List *list, void *data){
+	struct Node *node = malloc(sizeof(struct Node));
+       	node->next = list->head;
+	node->data = data; 
+	list->head = node; 
+	return node;
+}
+
+//traverseList
+void traverseList(struct List *list, void (*f)(void *)){
+	struct Node *evaluate = list->head;
+	while(evaluate){
+		f(evaluate->data);
+		evaluate = evaluate->next;	
+	}
+}
+
+//findNode
+struct Node *findNode(struct List *list, const void *dataSought,
+		int (*compar)(const void *, const void *)){
+	struct Node *evaluate = list->head;
+	while(evaluate){
+		int y = compareDouble(evaluate->data, dataSought);
+		if (y == 0){
+			return evaluate;
+		}	
+		evaluate = evaluate->next;
+	}
+	evaluate = NULL; 
+	return evaluate;
+}
+
+//compare method for findNode
+int compareDouble(const void * a, const void * b){
+	return (*(double*)a > *(double*)b) - (*(double*)b > *(double*)a);
+}
+
+//flip
+void flipSignDouble(void *data){
+	double flipped = *(double*)data;
+	flipped *= -1; 
+	*(double*)data = flipped;
+}
+
+//popfront
+void *popFront(struct List *list){
+	if(list->head == NULL){
+		return NULL;
+	}
+	struct Node *here = list->head;
+	void * re = (list->head)->data; 
+	list->head = (list->head)->next;
+	free(here);
+	return re;
+}
+
+//remove
+void removeAllNodes(struct List *list){
+	struct Node *evaluate = list->head;
+	while(evaluate){
+		popFront(list);
+		evaluate = evaluate->next;
+	}
+}
+
+//addAfter 
+struct Node *addAfter(struct List*list, struct Node *prevNode, void *data){
+	struct Node *add = malloc(sizeof(struct Node));
+	if(prevNode){
+		add->data = data; 
+		add->next = prevNode->next;
+		prevNode->next= add;
+	}else if(prevNode == NULL){
+		add = addFront(list, data);
+	}	
+return add;
+}
+
+//Reverse
+void reverseList(struct List *list){
+	struct Node *prv = NULL;
+	struct Node *cur = list->head;
+	struct Node *nxt;
+//	prv->next = cur;
+//	while (cur){
+//		cur->next = nxt->next;
+//		nxt->next = list->head;
+//		list->head= nxt;
+//		nxt = cur->next;	
+//	}
+
+	while(cur){
+		nxt = cur->next;
+		cur->next = prv;
+		prv = cur;
+		cur = nxt;
+	}
+	list->head = prv;
+}
+*/
